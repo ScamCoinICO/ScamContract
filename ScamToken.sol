@@ -21,7 +21,7 @@ contract ScamTokenERC20 {
     event Burn(address indexed from, uint256 value);
 
     function ScamTokenERC20(uint256 initialSupply, string tokenName, string tokenSymbol) public {
-        totalSupply = initialSupply*10**uint256(decimal); // Update total supply with decimal amount
+        totalSupply = initialSupply*10**uint256(decimals); // Update total supply with decimal amount
         balanceOf[msg.sender] = totalSupply;
         name = tokenName;
         symbol = tokenSymbol;
@@ -50,6 +50,52 @@ contract ScamTokenERC20 {
     }
 
     /**
+    * Transfer tokens to specified address from your account
+    *
+    * @param _to Address to send scamcoins to
+    * @param _value amount sending
+    */
+    function transfer(address _to, uint256 _value) public {
+        _transfer(msg.sender, _to, _value);
+    }
+
+    /**
+    * Transfer coins between addresses
+    */
+
+    function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
+        require(_value <= allowance[_from][msg.sender]);
+        allowance[_from][msg.sender] -= _value;
+        _transfer(_from, _to, _value);
+        return true;
+    }
+
+    /**
+    * Set allowance for other address
+    * allows _spender to send no more than specified allowance _value
+    *
+    * @param _spender address authorized to spend
+    * @param _value value allowed to send
+    */
+
+    function approve(address _spender, uint256 _value) public returns (bool success) {
+        allowance[msg.sender][_spender] = _value;
+        return true;
+    }
+
+    /**
+    * set allowance for other address and notify
+    */
+
+    function approveAndCall(address _spender, uint256 _value, bytes _extraData) public returns (bool success) {
+        tokenRecipient spender = tokenRecipient(_spender);
+        if (approve(_spender, _value)) {
+            spender.receiveApproval(msg.sender, _value, this, _extraData);
+            return true;
+        }
+        return false;
+    }
+    /**
       * Irreversibly removes specified amount of tokens from system
     */
 
@@ -62,7 +108,7 @@ contract ScamTokenERC20 {
     }
 
     function burnFrom(address _from, uint256 _value) public returns (bool success) {
-        require(balanceOf[_from] >= value);
+        require(balanceOf[_from] >= _value);
         require(_value <= allowance[_from][msg.sender]);
         balanceOf[_from] -= _value;
         allowance[_from][msg.sender] -= _value;
