@@ -43,6 +43,7 @@ contract ScamICO {
         FundTransfer(msg.sender, amount, true);
     }
 
+    // adds a conditional check to functions
     modifier afterDeadline() {
         if (now >= deadline) _;
     }
